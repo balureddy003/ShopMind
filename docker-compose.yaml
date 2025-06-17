@@ -1,0 +1,54 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ollama
+      - grandnode
+    environment:
+      - OLLAMA_URL=http://ollama:11434/v1
+      - GRANDNODE_URL=http://grandnode:5000
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/data/db
+
+  grandnode:
+    image: grandnode/grandnode:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - MongoDB__ConnectionString=mongodb://mongo:27017
+    depends_on:
+      - mongo
+
+volumes:
+  ollama:
+  mongo:
